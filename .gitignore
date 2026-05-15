@@ -1,0 +1,10 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Node.js
+node_modules/
+
+# Windows
+Thumbs.db
