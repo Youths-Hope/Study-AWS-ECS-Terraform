@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // DB接続設定
 const db = mysql.createPool({
-  host: 'study-db-tf.chyeu8ous5n5.ap-northeast-1.rds.amazonaws.com',
+  host: 'study-db-ecs.chyeu8ous5n5.ap-northeast-1.rds.amazonaws.com',
   user: 'admin',
   password: 'study-db',
   database: 'study_db',
