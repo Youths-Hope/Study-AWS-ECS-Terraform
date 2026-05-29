@@ -10,10 +10,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // DB接続設定
 const db = mysql.createPool({
-  host: 'study-db-ecs.chyeu8ous5n5.ap-northeast-1.rds.amazonaws.com',
-  user: 'admin',
-  password: 'study-db',
-  database: 'study_db',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0

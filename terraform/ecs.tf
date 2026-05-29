@@ -57,7 +57,7 @@ resource "aws_ecs_task_definition" "study_node_task" {
       secrets = [
         {
           name      = "DB_PASSWORD"
-          valueFrom = "arn:aws:secretsmanager:ap-northeast-1:799637010981:secret:study/db/password-z68Qs5:DB_PASSWORD::"
+          valueFrom = "${aws_secretsmanager_secret.db_password.arn}:DB_PASSWORD::"
         }
       ]
 
