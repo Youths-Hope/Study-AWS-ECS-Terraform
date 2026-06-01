@@ -1,10 +1,10 @@
 resource "aws_cloudwatch_log_group" "study_ecs_logs" {
-  name              = "/ecs/study-node-task"
+  name              = "/ecs/${var.task_family}"
   retention_in_days = 0
 }
 
 resource "aws_ecs_cluster" "study_cluster" {
-  name = "study-cluster"
+  name = var.cluster_name
 
   configuration {
     execute_command_configuration {
@@ -14,22 +14,22 @@ resource "aws_ecs_cluster" "study_cluster" {
 }
 
 resource "aws_ecs_task_definition" "study_node_task" {
-  family                   = "study-node-task"
+  family                   = var.task_family
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = "512"
-  memory                   = "1024"
+  cpu                      = "256"
+  memory                   = "512"
 
   execution_role_arn = "arn:aws:iam::799637010981:role/ecsTaskExecutionRole"
   task_role_arn      = "arn:aws:iam::799637010981:role/ecs-s3-task-role"
 
   container_definitions = jsonencode([
     {
-      name      = "study-node-app"
+      name      = var.container_name
       image     = "${aws_ecr_repository.study_node_app.repository_url}:latest"
       essential = true
-      cpu               = 512
-      memoryReservation = 1024
+      cpu               = 256
+      memoryReservation = 512
 
       environmentFiles = []
       mountPoints      = []
@@ -39,19 +39,20 @@ resource "aws_ecs_task_definition" "study_node_task" {
 
       portMappings = [
         {
-          name        = "study-node-app-3000-tcp"
+          name        = "${var.container_name}-${var.app_port}-tcp"
           appProtocol = "http"
-          containerPort = 3000
-          hostPort      = 3000
+          containerPort = var.app_port
+          hostPort      = var.app_port
           protocol      = "tcp"
         }
       ]
 
       environment = [
-        { name = "AWS_REGION", value = "ap-northeast-1" },
-        { name = "DB_HOST",    value = "study-db-ecs.chyeu8ous5n5.ap-northeast-1.rds.amazonaws.com" },
-        { name = "DB_NAME",    value = "study_db" },
-        { name = "DB_USER",    value = "admin" }
+        { name = "AWS_REGION", value = var.aws_region },
+        { name = "DB_HOST",    value = aws_db_instance.study_db.address },
+        { name = "DB_NAME",    value = var.db_name  },
+        { name = "DB_USER",    value = var.db_user },
+        { name = "S3_BUCKET_NAME", value = var.s3_bucket_name }
       ]
 
       secrets = [
@@ -64,8 +65,8 @@ resource "aws_ecs_task_definition" "study_node_task" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/study-node-task"
-          awslogs-region        = "ap-northeast-1"
+          awslogs-group         = "/ecs/${var.task_family}"
+          awslogs-region        = var.aws_region
           awslogs-stream-prefix = "ecs"
           awslogs-create-group = "true"
         }
@@ -80,7 +81,7 @@ resource "aws_ecs_task_definition" "study_node_task" {
 }
 
 resource "aws_ecs_service" "study_node_service" {
-  name            = "study-node-task-service-r7cd8nq1"
+  name            = var.service_name
   cluster         = aws_ecs_cluster.study_cluster.id
   task_definition = aws_ecs_task_definition.study_node_task.arn
   desired_count   = 1
@@ -105,8 +106,8 @@ resource "aws_ecs_service" "study_node_service" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.study_alb_tg.arn
-    container_name   = "study-node-app"
-    container_port   = 3000
+    container_name   = var.container_name
+    container_port   = var.app_port
   }
 
   depends_on = [

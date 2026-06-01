@@ -37,17 +37,28 @@ jobs:
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.account.outputs.account_id }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
+      - name: Set Image Tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
       - name: Build Docker image
         run: |
-          docker build --no-cache -t study-node-app .
+          docker build --no-cache \
+            -t study-node-app:${IMAGE_TAG} \
+            -t study-node-app:latest .
 
       - name: Tag Docker image
         run: |
-          docker tag study-node-app:latest ${{ steps.account.outputs.account_id }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/study-node-app:latest
+          ECR_URI=${{ steps.account.outputs.account_id }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/study-node-app
+
+          docker tag study-node-app:latest $ECR_URI:latest
+          docker tag study-node-app:${IMAGE_TAG} $ECR_URI:${IMAGE_TAG}
 
       - name: Push Docker image to ECR
         run: |
-          docker push ${{ steps.account.outputs.account_id }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/study-node-app:latest
+          ECR_URI=${{ steps.account.outputs.account_id }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/study-node-app
+
+          docker push $ECR_URI:latest
+          docker push $ECR_URI:${IMAGE_TAG}
 
       - name: Force new ECS deployment
         run: |

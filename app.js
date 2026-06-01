@@ -95,7 +95,7 @@ const s3 = new S3Client({
 const upload = multer({
   storage: multerS3({
     s3: s3,
-    bucket: 'youth-study-bucket-001',
+    bucket: process.env.S3_BUCKET_NAME,
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: function (req, file, cb) {
       cb(null, `images/${Date.now()}-${file.originalname}`);
@@ -182,7 +182,7 @@ app.post('/delete/:id', (req, res) => {
 
         await s3.send(
           new DeleteObjectCommand({
-            Bucket: 'youth-study-bucket-001',
+            Bucket: process.env.S3_BUCKET_NAME,
             Key: key
           })
         );
