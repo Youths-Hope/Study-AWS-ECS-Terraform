@@ -85,6 +85,12 @@ resource "aws_ecs_service" "study_node_service" {
   cluster         = aws_ecs_cluster.study_cluster.id
   task_definition = aws_ecs_task_definition.study_node_task.arn
   desired_count   = 1
+  lifecycle {
+    ignore_changes = [
+      desired_count
+    ]
+  }
+
   capacity_provider_strategy {
     capacity_provider = "FARGATE"
     weight            = 1
