@@ -1,6 +1,6 @@
 resource "aws_cloudwatch_log_group" "study_ecs_logs" {
   name              = "/ecs/${var.task_family}"
-  retention_in_days = 0
+  retention_in_days = 3
 }
 
 resource "aws_ecs_cluster" "study_cluster" {
@@ -154,4 +154,27 @@ resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
     scale_in_cooldown  = 300
     scale_out_cooldown = 60
   }
+}
+
+resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
+  alarm_name          = "study-ecs-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 80
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.study_cluster.name
+    ServiceName = aws_ecs_service.study_node_service.name
+  }
+
+  alarm_actions = [
+    aws_sns_topic.alarm_topic.arn
+  ]
+
+  alarm_description = "ECS CPU > 80%"
+  treat_missing_data = "notBreaching"
 }
