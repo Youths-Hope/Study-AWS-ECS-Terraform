@@ -51,11 +51,14 @@ resource "aws_ecs_task_definition" "study_node_task" {
         { name = "AWS_REGION", value = var.aws_region },
         { name = "DB_HOST",    value = aws_db_instance.study_db.address },
         { name = "DB_NAME",    value = var.db_name  },
-        { name = "DB_USER",    value = var.db_user },
         { name = "S3_BUCKET_NAME", value = var.s3_bucket_name }
       ]
 
       secrets = [
+        {
+          name      = "DB_USER"
+          valueFrom = "${aws_secretsmanager_secret.db_user.arn}:DB_USER::"
+        },
         {
           name      = "DB_PASSWORD"
           valueFrom = "${aws_secretsmanager_secret.db_password.arn}:DB_PASSWORD::"
