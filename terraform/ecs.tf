@@ -159,6 +159,25 @@ resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
   }
 }
 
+resource "aws_appautoscaling_policy" "ecs_memory_policy" {
+  name               = "study-ecs-memory-scaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_service.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_service.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_service.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value = 70
+
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
+  }
+}
+
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   alarm_name          = "study-ecs-cpu-high"
   comparison_operator = "GreaterThanThreshold"
@@ -179,5 +198,28 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   ]
 
   alarm_description = "ECS CPU > 80%"
+  treat_missing_data = "notBreaching"
+}
+
+resource "aws_cloudwatch_metric_alarm" "alb_target_5xx" {
+  alarm_name          = "study-alb-target-5xx"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "HTTPCode_Target_5XX_Count"
+  namespace           = "AWS/ApplicationELB"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 0
+
+  dimensions = {
+    LoadBalancer = aws_lb.study_alb.arn_suffix
+    TargetGroup  = aws_lb_target_group.study_alb_tg.arn_suffix
+  }
+
+  alarm_actions = [
+    aws_sns_topic.alarm_topic.arn
+  ]
+
+  alarm_description  = "ALB target 5XX count > 0"
   treat_missing_data = "notBreaching"
 }
