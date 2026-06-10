@@ -1,5 +1,5 @@
 resource "aws_db_subnet_group" "study_db_subnet" {
-  name = "study-db-subnet"
+  name        = "study-db-subnet"
   description = "for study"
 
   subnet_ids = [

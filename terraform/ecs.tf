@@ -1,8 +1,3 @@
-resource "aws_cloudwatch_log_group" "study_ecs_logs" {
-  name              = "/ecs/${var.task_family}"
-  retention_in_days = 3
-}
-
 resource "aws_ecs_cluster" "study_cluster" {
   name = var.cluster_name
 
@@ -25,9 +20,9 @@ resource "aws_ecs_task_definition" "study_node_task" {
 
   container_definitions = jsonencode([
     {
-      name      = var.container_name
-      image     = "${aws_ecr_repository.study_node_app.repository_url}:latest"
-      essential = true
+      name              = var.container_name
+      image             = "${aws_ecr_repository.study_node_app.repository_url}:latest"
+      essential         = true
       cpu               = 256
       memoryReservation = 512
 
@@ -39,8 +34,8 @@ resource "aws_ecs_task_definition" "study_node_task" {
 
       portMappings = [
         {
-          name        = "${var.container_name}-${var.app_port}-tcp"
-          appProtocol = "http"
+          name          = "${var.container_name}-${var.app_port}-tcp"
+          appProtocol   = "http"
           containerPort = var.app_port
           hostPort      = var.app_port
           protocol      = "tcp"
@@ -49,8 +44,8 @@ resource "aws_ecs_task_definition" "study_node_task" {
 
       environment = [
         { name = "AWS_REGION", value = var.aws_region },
-        { name = "DB_HOST",    value = aws_db_instance.study_db.address },
-        { name = "DB_NAME",    value = var.db_name  },
+        { name = "DB_HOST", value = aws_db_instance.study_db.address },
+        { name = "DB_NAME", value = var.db_name },
         { name = "S3_BUCKET_NAME", value = var.s3_bucket_name }
       ]
 
@@ -71,7 +66,7 @@ resource "aws_ecs_task_definition" "study_node_task" {
           awslogs-group         = "/ecs/${var.task_family}"
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "ecs"
-          awslogs-create-group = "true"
+          awslogs-create-group  = "true"
         }
       }
     }
@@ -128,98 +123,6 @@ resource "aws_ecs_service" "study_node_service" {
     rollback = true
   }
 
-  enable_ecs_managed_tags = true
+  enable_ecs_managed_tags       = true
   availability_zone_rebalancing = "ENABLED"
-}
-
-resource "aws_appautoscaling_target" "ecs_service" {
-  max_capacity       = 2
-  min_capacity       = 0
-  resource_id        = "service/${aws_ecs_cluster.study_cluster.name}/${aws_ecs_service.study_node_service.name}"
-  scalable_dimension = "ecs:service:DesiredCount"
-  service_namespace  = "ecs"
-}
-
-resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
-  name               = "study-ecs-cpu-scaling"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.ecs_service.resource_id
-  scalable_dimension = aws_appautoscaling_target.ecs_service.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.ecs_service.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    target_value = 60
-
-    predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageCPUUtilization"
-    }
-
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 60
-  }
-}
-
-resource "aws_appautoscaling_policy" "ecs_memory_policy" {
-  name               = "study-ecs-memory-scaling"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.ecs_service.resource_id
-  scalable_dimension = aws_appautoscaling_target.ecs_service.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.ecs_service.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    target_value = 70
-
-    predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
-    }
-
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 60
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
-  alarm_name          = "study-ecs-cpu-high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = 300
-  statistic           = "Average"
-  threshold           = 80
-
-  dimensions = {
-    ClusterName = aws_ecs_cluster.study_cluster.name
-    ServiceName = aws_ecs_service.study_node_service.name
-  }
-
-  alarm_actions = [
-    aws_sns_topic.alarm_topic.arn
-  ]
-
-  alarm_description = "ECS CPU > 80%"
-  treat_missing_data = "notBreaching"
-}
-
-resource "aws_cloudwatch_metric_alarm" "alb_target_5xx" {
-  alarm_name          = "study-alb-target-5xx"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 1
-  metric_name         = "HTTPCode_Target_5XX_Count"
-  namespace           = "AWS/ApplicationELB"
-  period              = 60
-  statistic           = "Sum"
-  threshold           = 0
-
-  dimensions = {
-    LoadBalancer = aws_lb.study_alb.arn_suffix
-    TargetGroup  = aws_lb_target_group.study_alb_tg.arn_suffix
-  }
-
-  alarm_actions = [
-    aws_sns_topic.alarm_topic.arn
-  ]
-
-  alarm_description  = "ALB target 5XX count > 0"
-  treat_missing_data = "notBreaching"
 }
