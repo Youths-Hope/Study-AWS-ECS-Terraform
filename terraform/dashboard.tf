@@ -118,7 +118,55 @@ resource "aws_cloudwatch_dashboard" "study_dashboard" {
             ]
           ]
 
+          stat   = "Minimum"
+          period = 60
+          region = var.aws_region
+        }
+      },
+      {
+        type   = "metric"
+        x      = 12
+        y      = 12
+        width  = 12
+        height = 6
+
+        properties = {
+          title = "ALB Request Count"
+
+          metrics = [
+            [
+              "AWS/ApplicationELB",
+              "RequestCount",
+              "LoadBalancer", aws_lb.study_alb.arn_suffix,
+              "TargetGroup", aws_lb_target_group.study_alb_tg.arn_suffix
+            ]
+          ]
+
           stat   = "Sum"
+          period = 60
+          region = var.aws_region
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 18
+        width  = 12
+        height = 6
+
+        properties = {
+          title = "ECS Live Task Count"
+
+          metrics = [
+            [
+              "AWS/ECS",
+              "LiveTaskCount",
+              "ClusterName", aws_ecs_cluster.study_cluster.name,
+              "ServiceName", aws_ecs_service.study_node_service.name
+            ]
+          ]
+
+          stat   = "Average"
           period = 60
           region = var.aws_region
         }

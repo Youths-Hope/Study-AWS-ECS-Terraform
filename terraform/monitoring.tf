@@ -26,6 +26,29 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   treat_missing_data = "notBreaching"
 }
 
+resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
+  alarm_name          = "study-ecs-memory-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "MemoryUtilization"
+  namespace           = "AWS/ECS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 80
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.study_cluster.name
+    ServiceName = aws_ecs_service.study_node_service.name
+  }
+
+  alarm_actions = [
+    aws_sns_topic.alarm_topic.arn
+  ]
+
+  alarm_description  = "ECS MEMORY > 80%"
+  treat_missing_data = "notBreaching"
+}
+
 resource "aws_cloudwatch_metric_alarm" "alb_target_5xx" {
   alarm_name          = "study-alb-target-5xx"
   comparison_operator = "GreaterThanThreshold"

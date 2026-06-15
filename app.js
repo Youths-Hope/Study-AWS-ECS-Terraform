@@ -83,6 +83,8 @@ app.get('/users', (req, res) => {
 
 //フォーム表示
 app.get('/form', (req, res) => {
+  console.log("GET /form");
+
   res.sendFile(__dirname + '/form.html');
 });
 
@@ -109,11 +111,17 @@ app.post('/add', upload.single('image'), (req, res) => {
   const email = req.body.email;
   const imageUrl = req.file ? req.file.location : null;
 
+  console.log(`POST /add name=${name} email=${email}`);
+
   db.query(
     'INSERT INTO users (name, email, image_url) VALUES (?, ?, ?)',
     [name, email, imageUrl],
+
     (err) => {
-      if (err) throw err;
+      if (err) {
+        console.error("DB Error:", err);
+        return res.status(500).send("DB Error");
+      }
       res.redirect('/users');
     }
   );
@@ -148,11 +156,17 @@ app.post('/update/:id', (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
 
+  console.log(`POST /edit name=${name} email=${email}`);
+
   db.query(
     'UPDATE users SET name = ?, email = ? WHERE id = ?',
     [name, email, id],
     (err) => {
-      if (err) throw err;
+      if (err) {
+        console.error("UPDATE Error:", err);
+        return res.status(500).send("Update Error");
+      }
+
       res.redirect('/users');
     }
   );
@@ -161,9 +175,14 @@ app.post('/update/:id', (req, res) => {
 app.post('/delete/:id', (req, res) => {
   const id = req.params.id;
 
+  console.log(`DELETE user id=${id}`);
+
   // 先に対象レコード取得
   db.query('SELECT * FROM users WHERE id = ?', [id], async (err, results) => {
-    if (err) throw err;
+    if (err) {
+      console.error("DELETE Error:", err);
+      return res.status(500).send("Delete Error");
+    }
 
     if (results.length === 0) {
       return res.status(404).send('対象データが見つかりません');
@@ -190,7 +209,11 @@ app.post('/delete/:id', (req, res) => {
 
       // S3削除後にDB削除
       db.query('DELETE FROM users WHERE id = ?', [id], (err2) => {
-        if (err2) throw err2;
+        if (err2) {
+          console.error("DELETE SQL Error:", err2);
+          return res.status(500).send("Delete Error");
+        }
+
         res.redirect('/users');
       });
     } catch (s3Err) {
