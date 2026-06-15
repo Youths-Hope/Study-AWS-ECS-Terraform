@@ -49,9 +49,9 @@ db.query(`CREATE DATABASE IF NOT EXISTS study_db`, (err) => {
 });
 
 // API
-#app.get('/', (req, res) => {
-#  res.send('Hello World');
-#});
+//app.get('/', (req, res) => {
+//  res.send('Hello World');
+//});
 app.get("/", (req, res) => {
   console.error("TEST ERROR: HTTP500");
   res.status(500).send("Internal Server Error");
