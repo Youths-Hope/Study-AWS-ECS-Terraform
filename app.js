@@ -122,6 +122,7 @@ app.post('/add', upload.single('image'), (req, res) => {
         console.error("DB Error:", err);
         return res.status(500).send("DB Error");
       }
+      console.log(`UPLOAD file=${req.file.originalname} url=${imageUrl}`);
       res.redirect('/users');
     }
   );
@@ -212,6 +213,10 @@ app.post('/delete/:id', (req, res) => {
         if (err2) {
           console.error("DELETE SQL Error:", err2);
           return res.status(500).send("Delete Error");
+        }
+
+        if (key) {
+          console.log(`DELETE S3 key=${key}`);
         }
 
         res.redirect('/users');
