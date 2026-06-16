@@ -193,12 +193,14 @@ app.post('/delete/:id', (req, res) => {
     const imageUrl = user.image_url;
 
     try {
+      let key = null;
+
       // image_url がある場合だけS3削除
       if (imageUrl) {
         const url = new URL(imageUrl);
 
         // /images/xxxx.png → images/xxxx.png
-        const key = decodeURIComponent(url.pathname.substring(1));
+        key = decodeURIComponent(url.pathname.substring(1));
 
         await s3.send(
           new DeleteObjectCommand({
