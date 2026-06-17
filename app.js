@@ -230,6 +230,14 @@ app.post('/delete/:id', (req, res) => {
   });
 });
 
+app.use((err, req, res, next) => {
+  console.error(
+    `APP_ERROR method=${req.method} path=${req.path} name=${err.name} message=${err.message}`
+  );
+
+  res.status(500).send("Application Error");
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
