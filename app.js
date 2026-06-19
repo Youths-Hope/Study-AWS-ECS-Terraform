@@ -243,3 +243,23 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
 });
+
+const { exec } = require("child_process");
+
+exec("python3 --version", (err, stdout, stderr) => {
+  if (err) {
+    console.error("PYTHON CHECK ERROR:", err);
+    return;
+  }
+
+  console.log("PYTHON VERSION:", stdout.trim());
+});
+
+exec("python3 -c \"import boto3; print('BOTO3 VERSION:', boto3.__version__)\"", (err, stdout, stderr) => {
+  if (err) {
+    console.error("BOTO3 CHECK ERROR:", err);
+    return;
+  }
+
+  console.log(stdout.trim());
+});
