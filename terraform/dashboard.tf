@@ -170,6 +170,76 @@ resource "aws_cloudwatch_dashboard" "study_dashboard" {
           period = 60
           region = var.aws_region
         }
+      },
+      {
+        type   = "metric"
+        x      = 12
+        y      = 18
+        width  = 12
+        height = 6
+
+        properties = {
+          title = "ALB Target 4XX"
+
+          metrics = [
+            [
+              "AWS/ApplicationELB",
+              "HTTPCode_Target_4XX_Count",
+              "LoadBalancer", aws_lb.study_alb.arn_suffix,
+              "TargetGroup", aws_lb_target_group.study_alb_tg.arn_suffix
+            ]
+          ]
+
+          stat   = "Sum"
+          period = 60
+          region = var.aws_region
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 24
+        width  = 12
+        height = 6
+
+        properties = {
+          title = "RDS Connections"
+
+          metrics = [
+            [
+              "AWS/RDS",
+              "DatabaseConnections",
+              "DBInstanceIdentifier", aws_db_instance.study_db.identifier
+            ]
+          ]
+
+          stat   = "Sum"
+          period = 60
+          region = var.aws_region
+        }
+      },
+      {
+        type   = "metric"
+        x      = 12
+        y      = 24
+        width  = 12
+        height = 6
+
+        properties = {
+          title = "RDS CPU"
+
+          metrics = [
+            [
+              "AWS/RDS",
+              "CPUUtilization",
+              "DBInstanceIdentifier", aws_db_instance.study_db.identifier
+            ]
+          ]
+
+          stat   = "Average"
+          period = 300
+          region = var.aws_region
+        }
       }
     ]
   })

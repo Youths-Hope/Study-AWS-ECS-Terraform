@@ -3,6 +3,7 @@ resource "aws_cloudwatch_log_group" "study_ecs_logs" {
   retention_in_days = 3
 }
 
+# ECS CPU使用率監視
 resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   alarm_name          = "study-ecs-cpu-high"
   comparison_operator = "GreaterThanThreshold"
@@ -26,6 +27,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
   treat_missing_data = "notBreaching"
 }
 
+# ECS メモリ使用率監視
 resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
   alarm_name          = "study-ecs-memory-high"
   comparison_operator = "GreaterThanThreshold"
@@ -49,6 +51,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
   treat_missing_data = "notBreaching"
 }
 
+# ALB 5xx発生数監視
 resource "aws_cloudwatch_metric_alarm" "alb_target_5xx" {
   alarm_name          = "study-alb-target-5xx"
   comparison_operator = "GreaterThanThreshold"
@@ -72,6 +75,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_target_5xx" {
   treat_missing_data = "notBreaching"
 }
 
+# ALB応答遅延監視
 resource "aws_cloudwatch_metric_alarm" "alb_response_time_high" {
   alarm_name          = "study-alb-response-time-high"
   comparison_operator = "GreaterThanThreshold"
@@ -98,6 +102,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_response_time_high" {
   treat_missing_data = "notBreaching"
 }
 
+# ECS サービスのAuto Scaling対象設定
 resource "aws_appautoscaling_target" "ecs_service" {
   max_capacity       = 2
   min_capacity       = 0
@@ -106,6 +111,7 @@ resource "aws_appautoscaling_target" "ecs_service" {
   service_namespace  = "ecs"
 }
 
+# ECS CPUAuto Scalingポリシー
 resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
   name               = "study-ecs-cpu-scaling"
   policy_type        = "TargetTrackingScaling"
@@ -125,6 +131,7 @@ resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
   }
 }
 
+# ECS メモリAuto Scalingポリシー
 resource "aws_appautoscaling_policy" "ecs_memory_policy" {
   name               = "study-ecs-memory-scaling"
   policy_type        = "TargetTrackingScaling"
