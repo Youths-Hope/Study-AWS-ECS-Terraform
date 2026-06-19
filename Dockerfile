@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y python3 python3-pip && \
-    pip3 install boto3 && \
+    pip3 install --break-system-packages boto3 && \
     rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
