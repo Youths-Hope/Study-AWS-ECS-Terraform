@@ -1,17 +1,14 @@
 import boto3
+import json
 
-ecs = boto3.client("ecs")
+secrets = boto3.client("secretsmanager", region_name="ap-northeast-1")
 
-response = ecs.describe_services(
-    cluster="study-cluster",
-    services=[
-        "study-node-task-service-r7cd8nq1"
-    ]
-)
+for secret_id in ["study/db/user", "study/db/password"]:
+    response = secrets.get_secret_value(SecretId=secret_id)
 
-service = response["services"][0]
+    value = response.get("SecretString", "")
 
-print("ServiceName:", service["serviceName"])
-print("Status:", service["status"])
-print("RunningCount:", service["runningCount"])
-print("DesiredCount:", service["desiredCount"])
+    print(f"SECRET_NAME: {secret_id}")
+
+    # パスワードをそのまま出さない
+    print(f"SECRET_LENGTH: {len(value)}")
