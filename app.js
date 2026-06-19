@@ -265,5 +265,15 @@ exec("python3 -c \"import boto3; print('BOTO3 VERSION:', boto3.__version__)\"", 
 });
 
 exec("python3 test.py", (err, stdout, stderr) => {
-  console.log(stdout);
+
+  if (err) {
+    console.error("TEST ERROR:", err);
+  }
+
+  if (stderr) {
+    console.error("TEST STDERR:", stderr);
+  }
+
+  console.log("TEST STDOUT:", stdout);
+
 });
