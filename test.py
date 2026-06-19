@@ -1,8 +1,17 @@
 import boto3
 
-s3 = boto3.client("s3")
+ecs = boto3.client("ecs")
 
-response = s3.list_buckets()
+response = ecs.describe_services(
+    cluster="study-cluster",
+    services=[
+        "study-node-task-service-r7cd8nq1"
+    ]
+)
 
-for bucket in response["Buckets"]:
-    print(bucket["Name"])
+service = response["services"][0]
+
+print("ServiceName:", service["serviceName"])
+print("Status:", service["status"])
+print("RunningCount:", service["runningCount"])
+print("DesiredCount:", service["desiredCount"])
