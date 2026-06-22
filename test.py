@@ -3,9 +3,13 @@ import json
 
 s3 = boto3.client("s3")
 
-response = s3.list_objects_v2(
-    Bucket="youth-study-bucket-001"
+with open("/tmp/test.txt", "w") as f:
+    f.write("Hello S3")
+
+s3.upload_file(
+    "/tmp/test.txt",
+    "youth-study-bucket-001",
+    "test/test.txt"
 )
 
-for obj in response.get("Contents", []):
-    print("FILE:", obj["Key"])
+print("UPLOAD OK: test/test.txt")
