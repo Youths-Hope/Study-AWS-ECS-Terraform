@@ -1,14 +1,9 @@
 import boto3
 import json
 
-secrets = boto3.client("secretsmanager", region_name="ap-northeast-1")
+s3 = boto3.client("s3")
 
-for secret_id in ["study/db/user", "study/db/password"]:
-    response = secrets.get_secret_value(SecretId=secret_id)
+response = s3.list_buckets()
 
-    value = response.get("SecretString", "")
-
-    print(f"SECRET_NAME: {secret_id}")
-
-    # パスワードをそのまま出さない
-    print(f"SECRET_LENGTH: {len(value)}")
+for bucket in response["Buckets"]:
+    print("BUCKET:", bucket["Name"])
