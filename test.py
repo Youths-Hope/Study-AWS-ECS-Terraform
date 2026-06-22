@@ -3,13 +3,13 @@ import json
 
 s3 = boto3.client("s3")
 
-with open("/tmp/test.txt", "w") as f:
-    f.write("Hello S3")
-
-s3.upload_file(
-    "/tmp/test.txt",
+s3.download_file(
     "youth-study-bucket-001",
-    "test/test.txt"
+    "test/test.txt",
+    "/tmp/download.txt"
 )
 
-print("UPLOAD OK: test/test.txt")
+with open("/tmp/download.txt") as f:
+    print(f.read())
+
+print("DOWNLOAD OK: test/test.txt")
