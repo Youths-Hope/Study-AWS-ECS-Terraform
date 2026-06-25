@@ -1,18 +1,13 @@
-FROM node:20
+FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip && \
-    pip3 install --break-system-packages boto3 && \
-    rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
 
-COPY package*.json ./
-
-RUN npm install
+RUN pip install -r requirements.txt
 
 COPY . .
 
 EXPOSE 3000
 
-CMD ["node", "app.js"]
+CMD ["python3", "app.py"]
