@@ -1,25 +1,18 @@
-import os
-import pymysql
-import time
-import boto3
 from flask import Flask, render_template, request, redirect
-from urllib.parse import urlparse
+
+from db import (
+    get_users,
+    get_user,
+    insert_user,
+    update_user,
+    delete_user,
+)
+from s3_utils import upload_image, delete_image
 
 app = Flask(
     __name__,
     template_folder=""
 )
-
-s3 = boto3.client("s3", region_name="ap-northeast-1")
-
-def get_db_connection():
-    return pymysql.connect(
-        host=os.environ.get("DB_HOST"),
-        user=os.environ.get("DB_USER"),
-        password=os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME"),
-        cursorclass=pymysql.cursors.DictCursor
-    )
 
 @app.route("/")
 def index():
@@ -34,12 +27,8 @@ def form():
 def users():
     print("GET /users")
 
-    conn = get_db_connection()
-
     try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM users")
-            results = cursor.fetchall()
+        results = get_users()
 
         html = "<h1>ユーザー一覧</h1>"
 
@@ -65,8 +54,9 @@ def users():
 
         return html
 
-    finally:
-        conn.close()
+    except Exception as e:
+        print("DB Error:", e)
+        return "DB Error", 500
 
 @app.route("/add", methods=["POST"])
 def add_user():
@@ -74,57 +64,26 @@ def add_user():
     email = request.form.get("email")
     image = request.files.get("image")
 
-    image_url = None
-
     print(f"POST /add name={name} email={email}")
 
-    if image and image.filename:
-        bucket = os.environ.get("S3_BUCKET_NAME")
-
-        key = f"images/{int(time.time() * 1000)}-{image.filename}"
-
-        s3.upload_fileobj(
-            image,
-            bucket,
-            key,
-            ExtraArgs={
-                "ContentType": image.content_type
-            }
-        )
-
-        image_url = f"https://{bucket}.s3.ap-northeast-1.amazonaws.com/{key}"
-
-        print(f"UPLOAD file={image.filename} url={image_url}")
-
-    conn = get_db_connection()
-
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "INSERT INTO users (name, email, image_url) VALUES (%s, %s, %s)",
-                (name, email, image_url)
-            )
+        image_url = None
+        if image and image.filename:
+            image_url = upload_image(image)
 
-        conn.commit()
+        insert_user(name, email, image_url)
 
     except Exception as e:
         print("DB Error:", e)
         return "DB Error", 500
-
-    finally:
-        conn.close()
 
     return redirect("/users")
 
 @app.route("/edit/<int:id>")
 def edit(id):
 
-    conn = get_db_connection()
-
     try:
-        with conn.cursor() as cursor:
-            cursor.execute( "SELECT * FROM users WHERE id = %s", (id,) )
-            user = cursor.fetchone()
+        user = get_user(id)
 
         if user is None:
             return "User not found", 404
@@ -143,9 +102,6 @@ def edit(id):
         print("DB Error:", e)
         return "DB Error", 500
 
-    finally:
-        conn.close()
-
 @app.route("/update/<int:id>", methods=["POST"])
 def update(id):
     name = request.form.get("name")
@@ -153,23 +109,12 @@ def update(id):
 
     print(f"POST /update name={name} email={email}")
 
-    conn = get_db_connection()
-
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "UPDATE users SET name = %s, email = %s WHERE id = %s",
-                (name, email, id)
-            )
-
-        conn.commit()
+        update_user(id, name, email)
 
     except Exception as e:
         print("DB Error:", e)
         return "DB Error", 500
-
-    finally:
-        conn.close()
 
     return redirect("/users")
 
@@ -177,12 +122,8 @@ def update(id):
 def delete(id):
     print(f"POST /delete id={id}")
 
-    conn = get_db_connection()
-
     try:
-        with conn.cursor() as cursor:
-            cursor.execute( "SELECT * FROM users WHERE id = %s", (id,) )
-            user = cursor.fetchone()
+        user = get_user(id)
 
         if user is None:
             return "User not found", 404
@@ -190,18 +131,9 @@ def delete(id):
         image_url = user["image_url"]
 
         if image_url:
-            key = urlparse(image_url).path.lstrip("/")
-            bucket = os.environ.get("S3_BUCKET_NAME")
+            delete_image(image_url)
 
-            s3.delete_object(
-                Bucket=bucket,
-                Key=key
-            )
-
-        with conn.cursor() as cursor:
-            cursor.execute( "DELETE FROM users WHERE id = %s", (id,) )
-
-        conn.commit()
+        delete_user(id)
 
     except Exception as e:
         import traceback
@@ -210,9 +142,6 @@ def delete(id):
         traceback.print_exc()
 
         return "DELETE Error", 500
-
-    finally:
-        conn.close()
 
     return redirect("/users")
 
