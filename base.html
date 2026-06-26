@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Flask Sample{% endblock %}</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 30px;
+        }
+
+        nav {
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            margin-right: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Flask Sample</h1>
+
+<nav>
+    <a href="/">Home</a>
+    <a href="/users">ユーザー一覧</a>
+    <a href="/form">ユーザー登録</a>
+</nav>
+
+<hr>
+
+{% block content %}
+{% endblock %}
+
+</body>
+</html>

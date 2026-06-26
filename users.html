@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}
+ユーザー一覧
+{% endblock %}
+
+{% block content %}
+
+<h2>ユーザー一覧</h2>
+
+{% for user in users %}
+<div style="margin-bottom:20px;">
+  <p>ID: {{ user.id }}</p>
+  <p>名前: {{ user.name }}</p>
+  <p>メール: {{ user.email }}</p>
+
+  {% if user.image_url %}
+    <img src="{{ user.image_url }}" width="200"><br>
+  {% endif %}
+
+  <a href="/edit/{{ user.id }}">編集</a>
+
+  <form action="/delete/{{ user.id }}" method="POST" style="display:inline;">
+    <button type="submit">削除</button>
+  </form>
+  <hr>
+</div>
+{% endfor %}
+
+{% endblock %}

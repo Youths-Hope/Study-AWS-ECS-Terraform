@@ -30,27 +30,10 @@ def users():
     try:
         results = get_users()
 
-        html = "<h1>ユーザー一覧</h1>"
-
-        for user in results:
-            image_html = ""
-            if user.get("image_url"):
-                image_html = f'<img src="{user["image_url"]}" width="200"><br>'
-
-            html += f"""
-            <div style="margin-bottom:20px;">
-              <p>ID: {user["id"]}</p>
-              <p>名前: {user["name"]}</p>
-              <p>メール: {user["email"]}</p>
-              {image_html}
-              <a href="/edit/{user["id"]}">編集</a>
-
-              <form action="/delete/{user["id"]}" method="POST" style="display:inline;">
-                <button type="submit">削除</button>
-              </form>
-              <hr>
-            </div>
-            """
+        return render_template(
+            "users.html",
+            users=results
+        )
 
         return html
 
@@ -88,15 +71,10 @@ def edit(id):
         if user is None:
             return "User not found", 404
 
-        html = f"""
-        <form action="/update/{user["id"]}" method="POST">
-          名前: <input type="text" name="name" value="{user["name"]}"><br>
-          メール: <input type="text" name="email" value="{user["email"]}"><br>
-          <button type="submit">更新</button>
-        </form>
-        """
-
-        return html
+        return render_template(
+            "edit.html",
+            user=user
+        )
 
     except Exception as e:
         print("DB Error:", e)
