@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, render_template, request, redirect
 
 from db import (
@@ -14,18 +15,23 @@ app = Flask(
     template_folder=""
 )
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s"
+)
+
 @app.route("/")
 def index():
     return "Hello Flask"
 
 @app.route("/form")
 def form():
-    print("GET /form");
+    logging.info("GET /form");
     return render_template("form.html")
 
 @app.route("/users")
 def users():
-    print("GET /users")
+    logging.info("GET /users")
 
     try:
         results = get_users()
@@ -35,10 +41,8 @@ def users():
             users=results
         )
 
-        return html
-
-    except Exception as e:
-        print("DB Error:", e)
+    except Exception:
+        logging.exception("SELECT Error")
         return "DB Error", 500
 
 @app.route("/add", methods=["POST"])
@@ -47,7 +51,7 @@ def add_user():
     email = request.form.get("email")
     image = request.files.get("image")
 
-    print(f"POST /add name={name} email={email}")
+    logging.info(f"POST /add name={name} email={email}")
 
     try:
         image_url = None
@@ -56,14 +60,15 @@ def add_user():
 
         insert_user(name, email, image_url)
 
-    except Exception as e:
-        print("DB Error:", e)
+    except Exception:
+        logging.exception("INSERT Error")
         return "DB Error", 500
 
     return redirect("/users")
 
 @app.route("/edit/<int:id>")
 def edit(id):
+    logging.info(f"GET /edit/{id}")
 
     try:
         user = get_user(id)
@@ -76,8 +81,8 @@ def edit(id):
             user=user
         )
 
-    except Exception as e:
-        print("DB Error:", e)
+    except Exception:
+        logging.exception("SELECT Error")
         return "DB Error", 500
 
 @app.route("/update/<int:id>", methods=["POST"])
@@ -85,20 +90,20 @@ def update(id):
     name = request.form.get("name")
     email = request.form.get("email")
 
-    print(f"POST /update name={name} email={email}")
+    logging.info(f"POST /update name={name} email={email}")
 
     try:
         update_user(id, name, email)
 
-    except Exception as e:
-        print("DB Error:", e)
+    except Exception:
+        logging.exception("UPDATE Error")
         return "DB Error", 500
 
     return redirect("/users")
 
 @app.route("/delete/<int:id>", methods=["POST"])
 def delete(id):
-    print(f"POST /delete id={id}")
+    logging.info(f"POST /delete id={id}")
 
     try:
         user = get_user(id)
@@ -113,12 +118,8 @@ def delete(id):
 
         delete_user(id)
 
-    except Exception as e:
-        import traceback
-
-        print("DELETE Error:", e)
-        traceback.print_exc()
-
+    except Exception:
+        logging.exception("DELETE Error")
         return "DELETE Error", 500
 
     return redirect("/users")
